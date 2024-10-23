@@ -1,82 +1,195 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import { Suspense } from 'react'
+import { Suspense, useEffect, useState } from 'react'
+import { Canvas } from '@react-three/fiber'
+import { OrbitControls } from '@react-three/drei'
+import { motion } from 'framer-motion'
+import { FaBars, FaSearch, FaRobot, FaHandshake, FaCog } from 'react-icons/fa'
 
-const Logo = dynamic(() => import('@/components/canvas/Examples').then((mod) => mod.Logo), { ssr: false })
-const Dog = dynamic(() => import('@/components/canvas/Examples').then((mod) => mod.Dog), { ssr: false })
-const Duck = dynamic(() => import('@/components/canvas/Examples').then((mod) => mod.Duck), { ssr: false })
-const View = dynamic(() => import('@/components/canvas/View').then((mod) => mod.View), {
-  ssr: false,
-  loading: () => (
-    <div className='flex h-96 w-full flex-col items-center justify-center'>
-      <svg className='-ml-1 mr-3 h-5 w-5 animate-spin text-black' fill='none' viewBox='0 0 24 24'>
-        <circle className='opacity-25' cx='12' cy='12' r='10' stroke='currentColor' strokeWidth='4' />
-        <path
-          className='opacity-75'
-          fill='currentColor'
-          d='M4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 0 1 4 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'
-        />
-      </svg>
-    </div>
-  ),
-})
-const Common = dynamic(() => import('@/components/canvas/View').then((mod) => mod.Common), { ssr: false })
+
+//NEW IMPORTS FOR VERYFI APP 
+
+// import React from 'react'
+// import Header from '../src/components/canvasWeb/Header'
+// import MainContent from '../src/components/canvasWeb/MainContent'
+// import Footer from '../src/components/canvasWeb/Footer'
+
+const Galaxy = dynamic(() => import('@/components/canvasGalaxy/Examples').then((mod) => mod.Galaxy), { ssr: false })
 
 export default function Page() {
+  const [scrollPosition, setScrollPosition] = useState(0);
+
+  const handleScroll = () => {
+    if (typeof window !== 'undefined') {
+      setScrollPosition(window.scrollY);
+    }
+  };
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (typeof window !== 'undefined') {
+        setScrollPosition(window.scrollY);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
+
+
+  const galaxyOpacity = 1 - scrollPosition / 1000;
+  const galaxySize = Math.max(1 - scrollPosition / 1000, 0.4);
+  const gradientStart = 0;
+  const gradientEnd = 400;
+
+  const backgroundGradient = scrollPosition > gradientStart
+    ? `linear-gradient(135deg, rgba(128,0,128, ${Math.min((scrollPosition - gradientStart) / (gradientEnd - gradientStart), 1)}), rgba(255,0,0, ${Math.min((scrollPosition - gradientStart) / (gradientEnd - gradientStart), 1)}))`
+    : '#000000';
+
   return (
-    <>
-      <div className='mx-auto flex w-full flex-col flex-wrap items-center md:flex-row  lg:w-4/5'>
-        {/* jumbo */}
-        <div className='flex w-full flex-col items-start justify-center p-12 text-center md:w-2/5 md:text-left'>
-          <p className='w-full uppercase'>Next + React Three Fiber</p>
-          <h1 className='my-4 text-5xl font-bold leading-tight'>Next 3D Starter</h1>
-          <p className='mb-8 text-2xl leading-normal'>A minimalist starter for React, React-three-fiber and Threejs.</p>
-        </div>
-
-        <div className='w-full text-center md:w-3/5'>
-          <View className='flex h-96 w-full flex-col items-center justify-center'>
-            <Suspense fallback={null}>
-              <Logo route='/blob' scale={0.6} position={[0, 0, 0]} />
-              <Common />
-            </Suspense>
-          </View>
-        </div>
+    <div className="relative h-screen w-screen overflow-y-scroll"> {/* Enable vertical scrolling */}
+      {/* Toolbar */}
+      <div className="fixed top-0 w-full p-4 bg-transparent flex justify-between items-center z-20">
+        <motion.div whileHover={{ scale: 1.1 }} className="text-white text-2xl cursor-pointer">
+          <FaBars />
+        </motion.div>
+        <motion.h1 className="text-white text-2xl font-bold" whileHover={{ scale: 1.05 }}>
+          DropDev
+        </motion.h1>
+        <motion.div whileHover={{ scale: 1.1 }} className="text-white text-2xl cursor-pointer">
+          <FaSearch />
+        </motion.div>
       </div>
 
-      <div className='mx-auto flex w-full flex-col flex-wrap items-center p-12 md:flex-row  lg:w-4/5'>
-        {/* first row */}
-        <div className='relative h-48 w-full py-6 sm:w-1/2 md:my-12 md:mb-40'>
-          <h2 className='mb-3 text-3xl font-bold leading-none text-gray-800'>Events are propagated</h2>
-          <p className='mb-8 text-gray-600'>Drag, scroll, pinch, and rotate the canvas to explore the 3D scene.</p>
-        </div>
-        <div className='relative my-12 h-48 w-full py-6 sm:w-1/2 md:mb-40'>
-          <View orbit className='relative h-full  sm:h-48 sm:w-full'>
-            <Suspense fallback={null}>
-              <Dog scale={2} position={[0, -1.6, 0]} rotation={[0.0, -0.3, 0]} />
-              <Common color={'lightpink'} />
-            </Suspense>
-          </View>
-        </div>
-        {/* second row */}
-        <div className='relative my-12 h-48 w-full py-6 sm:w-1/2 md:mb-40'>
-          <View orbit className='relative h-full animate-bounce sm:h-48 sm:w-full'>
-            <Suspense fallback={null}>
-              <Duck route='/blob' scale={2} position={[0, -1.6, 0]} />
-              <Common color={'lightblue'} />
-            </Suspense>
-          </View>
-        </div>
-        <div className='w-full p-6 sm:w-1/2'>
-          <h2 className='mb-3 text-3xl font-bold leading-none text-gray-800'>Dom and 3D are synchronized</h2>
-          <p className='mb-8 text-gray-600'>
-            3D Divs are renderer through the View component. It uses gl.scissor to cut the viewport into segments. You
-            tie a view to a tracking div which then controls the position and bounds of the viewport. This allows you to
-            have multiple views with a single, performant canvas. These views will follow their tracking elements,
-            scroll along, resize, etc.
-          </p>
-        </div>
+      {/* Galaxy on the right */}
+      <div className="fixed top-0 right-0 h-[100vh] w-[50vw] z-10 flex items-center justify-center">
+        <Canvas
+          gl={{ antialias: true, alpha: true }} // Enable alpha transparency
+          style={{ opacity: galaxyOpacity, transform: `scale(${galaxySize})`, transition: 'opacity 1s ease, transform 1s ease' }}
+          camera={{ position: [9, 3, 0], fov: 85 }}
+        >
+          <Suspense fallback={null}>
+            <Galaxy /> {/* Ensure this is working properly */}
+          </Suspense>
+          <OrbitControls enableZoom={false} />
+        </Canvas>
       </div>
-    </>
-  )
+
+      {/* Background Gradient */}
+      <div className="fixed top-0 left-0 h-screen w-screen -z-20" style={{ background: backgroundGradient, transition: 'background 1s ease' }}></div>
+
+      {/* Left content */}
+      <div className="absolute top-0 left-0 w-[50vw] h-screen flex flex-col items-center justify-center text-center text-white z-20">
+        <section className="flex flex-col items-center justify-center">
+          <motion.h1
+            className="text-6xl font-bold mb-6"
+            initial={{ opacity: 0, y: -50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1 }}
+          >
+            DropDev
+          </motion.h1>
+          <motion.p
+            className="text-xl max-w-2xl"
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1, delay: 0.5 }}
+          >
+            We're here to let you do what you do best. Here's your time back (Unique Value Proposition).
+          </motion.p>
+          <motion.a
+            href="#about"
+            className="mt-8 px-8 py-4 bg-gradient-to-r from-purple-500 to-indigo-600 text-white text-lg rounded-full shadow-lg hover:shadow-xl transition-all transform hover:scale-105"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 1, delay: 1 }}
+          >
+            Get Started
+          </motion.a>
+        </section>
+      </div>
+
+      {/* Information Sections */}
+      <div className="absolute top-[100vh] left-0 w-[50vw] flex flex-col items-center text-white z-10 space-y-12 px-12">
+        {/* Industry Section */}
+        <section id="about" className="h-screen flex flex-col justify-center items-center">
+          <motion.h2
+            className="text-4xl font-bold mb-8"
+            initial={{ opacity: 0, y: -50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1 }}
+          >
+            Chatbot Industries We Serve
+          </motion.h2>
+          <motion.div
+            className="flex space-x-6"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            transition={{ duration: 1 }}
+          >
+            <motion.div
+              className="bg-white text-black p-6 rounded-lg shadow-lg hover:shadow-2xl transform hover:scale-105 transition-all flex flex-col items-center"
+              whileHover={{ scale: 1.1 }}
+            >
+              <FaRobot className="text-4xl mb-4" />
+              <p>Customer Support</p>
+            </motion.div>
+            <motion.div
+              className="bg-white text-black p-6 rounded-lg shadow-lg hover:shadow-2xl transform hover:scale-105 transition-all flex flex-col items-center"
+              whileHover={{ scale: 1.1 }}
+            >
+              <FaRobot className="text-4xl mb-4" />
+              <p>Healthcare Assistance</p>
+            </motion.div>
+            <motion.div
+              className="bg-white text-black p-6 rounded-lg shadow-lg hover:shadow-2xl transform hover:scale-105 transition-all flex flex-col items-center"
+              whileHover={{ scale: 1.1 }}
+            >
+              <FaRobot className="text-4xl mb-4" />
+              <p>Sales & Marketing</p>
+            </motion.div>
+          </motion.div>
+        </section>
+
+        {/* Trust Section */}
+        <section className="h-screen flex flex-col justify-center items-center">
+          <motion.div
+            className="bg-gradient-to-r from-indigo-700 to-purple-700 p-8 rounded-lg shadow-lg"
+            initial={{ opacity: 0, y: 50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1 }}
+          >
+            <h2 className="text-4xl font-bold mb-6">Building Trust</h2>
+            <p className="text-lg mb-4">
+              At DropDev, we focus on building lasting relationships. Our platform is designed to ensure seamless integration and provide long-term value.
+            </p>
+            <p className="text-lg">
+              Our clients trust us because we deliver on time, provide consistent results, and stay transparent throughout the process.
+            </p>
+          </motion.div>
+        </section>
+
+        {/* Process Section */}
+        <section className="h-screen flex flex-col justify-center items-center">
+          <motion.div
+            className="bg-gray-800 p-8 rounded-lg shadow-lg"
+            initial={{ opacity: 0, y: 50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1 }}
+          >
+            <h2 className="text-3xl font-bold mb-6">Our Process</h2>
+            <p className="text-lg mb-4">We simplify your workflow in three steps:</p>
+            <ul className="list-disc list-inside text-lg space-y-2">
+              <li>Understand your needs and tailor a solution.</li>
+              <li>Implement advanced chatbot integrations seamlessly.</li>
+              <li>Provide ongoing support and optimization for continuous improvement.</li>
+            </ul>
+          </motion.div>
+        </section>
+      </div>
+    </div>
+  );
 }
